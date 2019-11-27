@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import os
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Conv2D, Dense, Flatten
+from keras.layers import Conv2D, Dense, Flatten, MaxPool2D
 from sklearn.model_selection import train_test_split
 
-
+#Read data
 full_data = pd.read_csv("train.csv")
 print(full_data.shape)
 
@@ -39,6 +39,7 @@ model = Sequential()
 
 #Add model layers
 model.add(Conv2D(64, kernel_size = 3, activation = 'relu', input_shape = (28, 28, 1)))
+model.add(MaxPool2D(pool_size = (2, 2)))
 model.add(Conv2D(32, kernel_size = 3, activation = 'relu'))
 model.add(Flatten())
 model.add(Dense(10, activation = 'softmax'))
