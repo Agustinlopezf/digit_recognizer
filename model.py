@@ -6,6 +6,7 @@ from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Conv2D, Dense, Flatten, MaxPool2D
 from sklearn.model_selection import train_test_split
+from keras.preprocessing.image import ImageDataGenerator
 
 #Read data
 full_data = pd.read_csv("train.csv")
@@ -27,11 +28,18 @@ labels_original = np.asarray(full_data['label'])
 images_original = np.asarray(full_data.loc[:, full_data.columns != 'label'])
 images_original = images_original.reshape(images_original.shape[0], 28, 28, 1)
 
-#Augment data by rotating images
-labels_augmented = np.concatenate((labels_original, labels_original)) #The labels remain the same
-images_augmented = np.concatenate((images_original, images_original.transpose(0, 2, 1, 3))) #Transpose two of the axis in order to rotate the image
+#Data augmentation
+data_generator = ImageDataGenerator(
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        fill_mode='nearest')
 
-X_train, X_test, y_train, y_test = train_test_split(images_augmented, labels_augmented, test_size = 0.05) 
+
+
+X_train, X_test, y_train, y_test = train_test_split(images_original, labels_original, test_size = 0.05) 
 
 #Convert labels to categorical values 
 #to_categorical is a one-hot conversion. The data must be converted to a numpy array beforehand in order to work well
@@ -52,7 +60,12 @@ model.add(Dense(10, activation = 'softmax'))
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 #Train the model
-model.fit(X_train, y_train_converted, validation_data=(X_test, y_test_converted), epochs=5)
+#model.fit(X_train, y_train_converted, validation_data=(X_test, y_test_converted), epochs=5)
+data_generator.fit(X_train)
+image_iterator = data_generator.flow(X_train, y_train_converted)
+validation_iterator = data_generator.flow(X_test, y_test_converted)
+model.fit_generator(image_iterator, epochs = 5, validation_data = validation_iterator)
+
 
 #Make predictions
 test_data = np.asarray(pd.read_csv('test.csv'))
