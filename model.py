@@ -64,7 +64,7 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 data_generator.fit(X_train)
 image_iterator = data_generator.flow(X_train, y_train_converted)
 validation_iterator = data_generator.flow(X_test, y_test_converted)
-model.fit_generator(image_iterator, epochs = 5, validation_data = validation_iterator)
+model.fit_generator(image_iterator, steps_per_epoch = 1000, epochs = 20, validation_data = validation_iterator)
 
 
 #Make predictions
