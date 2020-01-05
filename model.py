@@ -3,10 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from keras.utils import to_categorical
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Conv2D, Dense, Flatten, MaxPool2D
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import ImageDataGenerator
+import os
 
 #Read data
 full_data = pd.read_csv("train.csv")
@@ -46,26 +47,34 @@ X_train, X_test, y_train, y_test = train_test_split(images_original, labels_orig
 y_train_converted = to_categorical(y_train, num_classes = 10)
 y_test_converted  = to_categorical(y_test, num_classes = 10)
 
-#Create model
-model = Sequential()
+#Load model if it exists, or create one from scratch
+if os.path.isfile('model.h5'):
+    model = load_model('model.h5')
+    print('Model loaded')
+else:
+    #Create model
+    model = Sequential()
 
-#Add model layers
-model.add(Conv2D(64, kernel_size = 3, activation = 'relu', input_shape = (28, 28, 1)))
-model.add(MaxPool2D(pool_size = (2, 2)))
-model.add(Conv2D(32, kernel_size = 3, activation = 'relu'))
-model.add(Flatten())
-model.add(Dense(10, activation = 'softmax'))
+    #Add model layers
+    model.add(Conv2D(64, kernel_size = 3, activation = 'relu', input_shape = (28, 28, 1)))
+    model.add(MaxPool2D(pool_size = (2, 2)))
+    model.add(Conv2D(32, kernel_size = 3, activation = 'relu'))
+    model.add(Flatten())
+    model.add(Dense(10, activation = 'softmax'))
 
-#Compile model using accuracy to measure model performance
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    #Compile model using accuracy to measure model performance
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-#Train the model
-#model.fit(X_train, y_train_converted, validation_data=(X_test, y_test_converted), epochs=5)
-data_generator.fit(X_train)
-image_iterator = data_generator.flow(X_train, y_train_converted)
-validation_iterator = data_generator.flow(X_test, y_test_converted)
-model.fit_generator(image_iterator, steps_per_epoch = 1000, epochs = 20, validation_data = validation_iterator)
+    #Train the model
+    #model.fit(X_train, y_train_converted, validation_data=(X_test, y_test_converted), epochs=5)
+    data_generator.fit(X_train)
+    image_iterator = data_generator.flow(X_train, y_train_converted)
+    validation_iterator = data_generator.flow(X_test, y_test_converted)
+    model.fit_generator(image_iterator, steps_per_epoch = 1000, epochs = 20, validation_data = validation_iterator)
 
+    #Save full model to HDF5 file (architecture, weight, etc)
+    model.save('model.h5')
+    print('Model saved to disk')
 
 #Make predictions
 test_data = np.asarray(pd.read_csv('test.csv'))
