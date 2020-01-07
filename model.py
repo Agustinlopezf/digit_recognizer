@@ -9,9 +9,27 @@ from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import ImageDataGenerator
 import os
 
+SAVED_MODEL_FILE = 'saved_model.h5'
+
 #Read data
 full_data = pd.read_csv("train.csv")
 print(full_data.shape)
+
+def plot_training_history(history):
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(len(acc))
+
+    plt.figure()
+    plt.plot(epochs, acc, 'b-')
+    plt.plot(epochs, val_acc, 'b')
+    plt.title('Training and validation accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend(loc = 'best')
+    plt.show()
 
 #Print 10 random number
 fig, ax = plt.subplots(nrows = 5, ncols = 2, figsize = (15, 5))
@@ -48,8 +66,8 @@ y_train_converted = to_categorical(y_train, num_classes = 10)
 y_test_converted  = to_categorical(y_test, num_classes = 10)
 
 #Load model if it exists, or create one from scratch
-if os.path.isfile('model.h5'):
-    model = load_model('model.h5')
+if os.path.isfile(SAVED_MODEL_FILE):
+    model = load_model(SAVED_MODEL_FILE)
     print('Model loaded')
 else:
     #Create model
@@ -70,10 +88,13 @@ else:
     data_generator.fit(X_train)
     image_iterator = data_generator.flow(X_train, y_train_converted)
     validation_iterator = data_generator.flow(X_test, y_test_converted)
-    model.fit_generator(image_iterator, steps_per_epoch = 1000, epochs = 20, validation_data = validation_iterator)
+    history = model.fit_generator(image_iterator, steps_per_epoch = 1000, epochs = 20, validation_data = validation_iterator)
+    
+    #Plot training history
+    plot_training_history(history)
 
     #Save full model to HDF5 file (architecture, weight, etc)
-    model.save('model.h5')
+    model.save(SAVED_MODEL_FILE)
     print('Model saved to disk')
 
 #Make predictions
@@ -96,3 +117,5 @@ output_dataframe = pd.DataFrame(output_dict)
 
 #Save results as csv file
 output_dataframe.to_csv('predictions.csv', index = False)
+
+
